@@ -52,14 +52,14 @@ func QuerySubmittedDateTopic(cat string) ([]byte, error) {
 	}
 	return data, nil
 }
-func (res Result) MakeResultFromCate(cat string) error {
+func (res *Result) MakeResultFromCate(cat string) error {
 
 	data, err := QuerySubmittedDateTopic(cat)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 		return err
 	}
-	err = xml.Unmarshal([]byte(data), &res)
+	err = xml.Unmarshal([]byte(data), res)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 		return err
@@ -68,20 +68,19 @@ func (res Result) MakeResultFromCate(cat string) error {
 	return nil
 
 }
-func (res Result) PrintEntrys() {
-
+func (res *Result) PrintEntrys(w io.Writer) {
 	for _, entry := range res.Entry {
-		fmt.Printf("*********************************\n")
-		fmt.Printf("Id\t%s\n", entry.Id)
-		fmt.Printf("Update\t%s\n", entry.Updated)
-		fmt.Printf("Published\t%s\n", entry.Published)
-		fmt.Printf("Title\t%s\n", entry.Title)
-		fmt.Printf("Summary\t%s\n", entry.Summary)
+		fmt.Fprintf(w, "*********************************\n")
+		fmt.Fprintf(w, "Id\t%s\n", entry.Id)
+		fmt.Fprintf(w, "Update\t%s\n", entry.Updated)
+		fmt.Fprintf(w, "Published\t%s\n", entry.Published)
+		fmt.Fprintf(w, "Title\t%s\n", entry.Title)
+		fmt.Fprintf(w, "Summary\t%s\n", entry.Summary)
 		for _, author := range entry.Authors {
-			fmt.Printf("author\t%s\n", author.Name)
+			fmt.Fprintf(w, "author\t%s\n", author.Name)
 		}
 		for _, cat := range entry.Categorys {
-			fmt.Printf("Cat Term\t%s\n", cat.Term)
+			fmt.Fprintf(w, "Cat Term\t%s\n", cat.Term)
 		}
 
 	}
