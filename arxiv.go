@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -51,38 +52,38 @@ func QuerySubmittedDateTopic(cat string) ([]byte, error) {
 	}
 	return data, nil
 }
+func (res Result) MakeResultFromCate(cat string) error {
 
-func PrintNewInfo(categorys ...string) {
-	for _, categoryStr := range categorys {
+	data, err := QuerySubmittedDateTopic(cat)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+		return err
+	}
+	err = xml.Unmarshal([]byte(data), &res)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+		return err
+	}
 
-		res := new(Result)
-		//cs.ai ..etl
-		data, err := QuerySubmittedDateTopic(categoryStr)
-		if err != nil {
-			fmt.Printf("error: %v", err)
-			return
+	return nil
+
+}
+func (res Result) PrintEntrys() {
+
+	for _, entry := range res.Entry {
+		fmt.Printf("*********************************\n")
+		fmt.Printf("Id\t%s\n", entry.Id)
+		fmt.Printf("Update\t%s\n", entry.Updated)
+		fmt.Printf("Published\t%s\n", entry.Published)
+		fmt.Printf("Title\t%s\n", entry.Title)
+		fmt.Printf("Summary\t%s\n", entry.Summary)
+		for _, author := range entry.Authors {
+			fmt.Printf("author\t%s\n", author.Name)
 		}
-		err = xml.Unmarshal([]byte(data), &res)
-		if err != nil {
-			fmt.Printf("error: %v", err)
-			return
-		}
-		for _, entry := range res.Entry {
-			fmt.Printf("*********************************\n")
-			fmt.Printf("Id\t%s\n", entry.Id)
-			fmt.Printf("Update\t%s\n", entry.Updated)
-			fmt.Printf("Published\t%s\n", entry.Published)
-			fmt.Printf("Title\t%s\n", entry.Title)
-			fmt.Printf("Summary\t%s\n", entry.Summary)
-			for _, author := range entry.Authors {
-				fmt.Printf("author\t%s\n", author.Name)
-
-			}
-			for _, cat := range entry.Categorys {
-				fmt.Printf("Cat Term\t%s\n", cat.Term)
-			}
-
+		for _, cat := range entry.Categorys {
+			fmt.Printf("Cat Term\t%s\n", cat.Term)
 		}
 
 	}
+
 }
