@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	arxiv = "http://export.arxiv.org/api/query?search_query="
+	arxiv     = "http://export.arxiv.org/api/query?search_query="
+	querySort = "&sortBy=submittedDate&sortOrder=descending&"
 )
 
 type Result struct {
@@ -35,7 +36,27 @@ type Category struct {
 
 func QuerySubmittedDateTopic(cat string) ([]byte, error) {
 
-	queryParam := "cat:" + cat + "&sortBy=submittedDate&sortOrder=descending&max_results=50"
+	queryParam := "cat:" + cat + querySort + "max_results=50"
+	queryURL := arxiv + queryParam
+	resp, err := http.Get(queryURL)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		//resp.Body.Close()
+		return nil, fmt.Errorf("Getting %s: %s", queryURL, resp.Status)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func QuerySubmittedDateCustomTopic(custom string) ([]byte, error) {
+	//all:slam&sortBy=submittedDate&sortOrder=descending&max_results=50
+	queryParam := "all:" + custom + querySort + "max_results=200"
 	queryURL := arxiv + queryParam
 	resp, err := http.Get(queryURL)
 	defer resp.Body.Close()
@@ -67,6 +88,20 @@ func (res *Result) MakeResultFromCate(cat string) error {
 
 	return nil
 
+}
+func (res *Result) MakeResultFromCustomTopic(custom string) error {
+
+	data, err := QuerySubmittedDateCustomTopic(custom)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+		return err
+	}
+	err = xml.Unmarshal([]byte(data), res)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+		return err
+	}
+	return nil
 }
 func (res *Result) PrintEntrys(w io.Writer) {
 	for _, entry := range res.Entry {
